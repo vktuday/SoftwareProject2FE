@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "https://software-project2-fe.vercel.app";
+  process.env.REACT_APP_API_BASE_URL || "https://softwareproject2.onrender.com";
 
 // Get JWT token from localStorage
 export function getToken() {

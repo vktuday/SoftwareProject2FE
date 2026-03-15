@@ -11,9 +11,9 @@ export default function NavBar({ isAuthed, me, onLogout }) {
       {/* Scrolling promo ribbon */}
       <div className="navbar-ribbon">
         <span>
-          Free shipping on orders over $50 &nbsp;·&nbsp; New arrivals every week &nbsp;·&nbsp;
-          Take the skin quiz for personalized picks &nbsp;·&nbsp; Free shipping on orders over $50
-          &nbsp;·&nbsp; New arrivals every week &nbsp;·&nbsp; Take the skin quiz for personalized picks
+          COMP313 &nbsp;·&nbsp; software project 2 &nbsp;·&nbsp;
+          Take the skin quiz for personalized picks &nbsp;·&nbsp; COMP313
+          &nbsp;·&nbsp;software project 2 &nbsp;·&nbsp; Take the skin quiz for personalized picks
         </span>
       </div>
 

@@ -192,3 +192,10 @@
 
   .nav-right { justify-content: flex-end; }
 }
+
+
+/* Space between LOGO and Products Nav */
+.nav-left a:nth-child(2) {
+  margin-left: 20px;
+}
+

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../api";
 import { Link } from "react-router-dom";
+import { getProductImage } from "../utils/productImageMap";
 import "./Products.css";
 
 const NO_IMAGE =
@@ -133,12 +134,11 @@ export default function Products() {
             {sortedProducts.map((p) => (
               <div className="products-row" key={p._id}>
                 <div className="products-cell">
-                  <img className="thumb" src={NO_IMAGE} alt="product" />
+                  <img className="thumb" src={getProductImage(p.name) || NO_IMAGE} alt={p.name}/>
                 </div>
                 <div className="products-cell">
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{p.name}</div>
-                    <div style={{ fontSize: 12, color: "#A1A1AA", marginTop: 2 }}>ID: {p._id}</div>
                   </div>
                 </div>
                 <div className="products-cell" style={{ fontSize: 14 }}>{p.brand}</div>

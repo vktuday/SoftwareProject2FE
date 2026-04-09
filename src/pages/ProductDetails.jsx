@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { apiRequest } from "../api";
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest, getToken } from "../api";
 import { Link, useParams } from "react-router-dom";
+import { getProductImage } from "../utils/productImageMap";
 import "./ProductDetails.css";
 
 const NO_IMAGE =
@@ -18,23 +19,92 @@ const NO_IMAGE =
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [me, setMe] = useState(null);
+  const [role, setRole] = useState("");
   const [loading, setLoading] = useState(true);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [error, setError] = useState("");
+  const isAuthed = !!getToken();
 
-  useEffect(() => {
-    async function load() {
-      setError("");
-      setLoading(true);
+  const isFavorite = useMemo(() => {
+    if (!me?.favorites || !product?._id) return false;
+    return me.favorites.some((favorite) => favorite._id === product._id);
+  }, [me, product]);
+
+  async function loadCurrentUser() {
+    if (!isAuthed) {
+      setMe(null);
+      setRole("");
+      return;
+    }
+  
+    try {
+      const data = await apiRequest("/api/users/me", { method: "GET" });
+      setMe(data.user);
+      setRole("user");
+    } catch {
       try {
-        const data = await apiRequest(`/api/products/${id}`, { method: "GET" });
-        setProduct(data.product);
-      } catch (err) {
-        setError(err.message || "Failed to load product");
-      } finally {
-        setLoading(false);
+        const trainerData = await apiRequest("/api/trainers/me", { method: "GET" });
+        if (trainerData?.trainer) {
+          setMe(null);
+          setRole("trainer");
+        } else {
+          setMe(null);
+          setRole("");
+        }
+      } catch {
+        setMe(null);
+        setRole("");
       }
     }
-    load();
+  }
+
+  async function loadProduct() {
+    setError("");
+    setLoading(true);
+    try {
+      const data = await apiRequest(`/api/products/${id}`, { method: "GET" });
+      setProduct(data.product);
+    } catch (err) {
+      setError(err.message || "Failed to load product");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFavoriteClick() {
+    if (!isAuthed) {
+      setError("Please log in first to save favorites");
+      return;
+    }
+
+    if (!product?._id) return;
+
+    setFavoriteLoading(true);
+    setError("");
+
+    try {
+      if (isFavorite) {
+        await apiRequest(`/api/users/me/favorites/${product._id}`, {
+          method: "DELETE",
+        });
+      } else {
+        await apiRequest(`/api/users/me/favorites/${product._id}`, {
+          method: "POST",
+        });
+      }
+
+      await loadCurrentUser();
+    } catch (err) {
+      setError(err.message || "Failed to update favorites");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadProduct();
+    loadCurrentUser();
   }, [id]);
 
   return (
@@ -46,7 +116,17 @@ export default function ProductDetails() {
       {loading && <p style={{ color: "#888" }}>Loading...</p>}
 
       {error && (
-        <div style={{ background: "#ffe5e5", border: "1px solid #ffb3b3", padding: "12px 16px", borderRadius: 10, color: "#c00", fontSize: 14 }}>
+        <div
+          style={{
+            background: "#ffe5e5",
+            border: "1px solid #ffb3b3",
+            padding: "12px 16px",
+            borderRadius: 10,
+            color: "#c00",
+            fontSize: 14,
+            marginBottom: 16,
+          }}
+        >
           {error}
         </div>
       )}
@@ -54,12 +134,14 @@ export default function ProductDetails() {
       {product && (
         <div className="product-card">
           <div className="product-inner">
-            {/* Image panel */}
             <div className="product-img-panel">
-              <img className="product-img" src={NO_IMAGE} alt="No product image" />
+              <img
+                className="product-img"
+                src={getProductImage(product.name) || NO_IMAGE}
+                alt={product.name}
+              />
             </div>
 
-            {/* Info panel */}
             <div className="product-info">
               <p className="product-category">Skincare</p>
               <h1 className="product-name">{product.name}</h1>
@@ -73,10 +155,21 @@ export default function ProductDetails() {
 
               <div className="product-desc">{product.description}</div>
 
-              <div className="product-cta">
-                <button className="btn-add-to-bag">Add to Bag</button>
-                <button className="btn-wishlist">♡</button>
-              </div>
+              {role === "user" && (
+                <div className="product-cta">
+                  <button
+                    className="btn-add-to-bag"
+                    onClick={handleFavoriteClick}
+                    disabled={favoriteLoading}
+                  >
+                    {favoriteLoading
+                      ? "Updating..."
+                      : isFavorite
+                      ? "Remove from favorites"
+                      : "Add to favorites"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

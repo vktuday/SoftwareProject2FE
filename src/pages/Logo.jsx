@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import "./Logo.css";
 
-// Clickable logo that returns to home
+
 export default function Logo() {
   return (
     <div style={{ textAlign: "center", marginBottom: "20px" }}>

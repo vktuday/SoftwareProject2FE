@@ -29,7 +29,7 @@ export default function Quiz() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewSkinType, setPreviewSkinType] = useState("");
   const [previewConcerns, setPreviewConcerns] = useState([]);
-  const previewInfo = getSkinTypeInfo(previewSkinType);
+  const previewInfo = getSkinTypeInfo(previewSkinType, gender);
 
   function handlePreview(e) {
     e.preventDefault();
@@ -44,9 +44,26 @@ export default function Quiz() {
   }
 
   async function saveResult() {
-    setLoading(true);
-    setError("");
-    try {
+  setLoading(true);
+  setError("");
+
+  try {
+    const role = localStorage.getItem("role");
+
+    if (role === "trainer") {
+      
+      await apiRequest("/api/trainers/me/quiz", {
+        method: "PUT",
+        body: JSON.stringify({
+          skinType: previewSkinType,
+          concerns: previewConcerns,
+          age,        
+          gender,     
+        }),
+      });
+
+      navigate("/trainer-dashboard");
+    } else {
       await apiRequest("/api/users/me/quiz-result", {
         method: "PUT",
         body: JSON.stringify({
@@ -56,14 +73,17 @@ export default function Quiz() {
           gender,
         }),
       });
-      setPreviewOpen(false);
+
       navigate("/dashboard");
-    } catch (err) {
-      setError(err.message || "Failed to save quiz");
-    } finally {
-      setLoading(false);
     }
+
+    setPreviewOpen(false);
+  } catch (err) {
+    setError(err.message || "Failed to save quiz");
+  } finally {
+    setLoading(false);
   }
+}
 
   useEffect(() => {
     async function prefill() {

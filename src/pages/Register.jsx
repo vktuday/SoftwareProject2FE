@@ -6,7 +6,14 @@ import Logo from "../components/Logo";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "user"
+  });
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,13 +21,32 @@ export default function Register() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const data = await apiRequest("/api/auth/register", {
+      
+      let endpoint = "/api/auth/register";
+
+      if (form.role === "trainer") {
+        endpoint = "/api/auth/trainer/register";
+      }
+
+      const data = await apiRequest(endpoint, {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password
+        }),
       });
+      localStorage.setItem("role", form.role);
       setToken(data.token);
-      navigate("/dashboard");
+
+      if (form.role === "trainer") {
+        navigate("/trainer-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+
     } catch (err) {
       setError(err.message || "Register failed");
     } finally {
@@ -30,18 +56,21 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      {/* Left decorative panel */}
+
       <div className="auth-panel">
         <div className="auth-panel-blob-violet" />
         <div className="auth-panel-blob-cyan" />
+
         <div className="auth-panel-content">
           <p className="auth-eyebrow">Join for free</p>
           <h2 className="auth-panel-brand">
             Face<em>Card</em>
           </h2>
+
           <p className="auth-panel-tagline">
             Create your account and discover products perfectly matched to your skin type.
           </p>
+
           <div className="auth-panel-chips">
             <span className="auth-chip auth-chip-red">Personalized</span>
             <span className="auth-chip auth-chip-violet">Free Quiz</span>
@@ -50,21 +79,31 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Right form panel */}
       <div className="auth-form-panel">
         <div className="auth-form-inner">
+
           <Logo />
+
           <p className="auth-eyebrow">Get started</p>
           <h1>Create account</h1>
           <p>Join thousands discovering their perfect skincare routine.</p>
 
           {error && (
-            <div style={{ background: "#ffe5e5", border: "1px solid #ffb3b3", padding: "10px 14px", borderRadius: 8, marginBottom: 16, fontSize: 14, color: "#c00" }}>
+            <div style={{
+              background: "#ffe5e5",
+              border: "1px solid #ffb3b3",
+              padding: "10px 14px",
+              borderRadius: 8,
+              marginBottom: 16,
+              fontSize: 14,
+              color: "#c00"
+            }}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
+
             <div className="auth-group">
               <label>Full Name</label>
               <input
@@ -74,6 +113,7 @@ export default function Register() {
                 required
               />
             </div>
+
             <div className="auth-group">
               <label>Email</label>
               <input
@@ -84,6 +124,7 @@ export default function Register() {
                 required
               />
             </div>
+
             <div className="auth-group">
               <label>Password</label>
               <input
@@ -94,14 +135,39 @@ export default function Register() {
                 required
               />
             </div>
+
+            <div className="auth-group">
+              <label>Join as</label>
+                    
+              <div className="auth-role-toggle">
+                <button
+                  type="button"
+                  className={`auth-role-option ${form.role === "user" ? "active" : ""}`}
+                  onClick={() => setForm({ ...form, role: "user" })}
+                >
+                  User
+                </button>
+                    
+                <button
+                  type="button"
+                  className={`auth-role-option ${form.role === "trainer" ? "active" : ""}`}
+                  onClick={() => setForm({ ...form, role: "trainer" })}
+                >
+                  Trainer
+                </button>
+              </div>
+            </div>
+
             <button className="auth-submit" type="submit" disabled={loading}>
               {loading ? "Creating account..." : "Create account"}
             </button>
+
           </form>
 
           <p className="auth-footer">
             Already have an account? <Link to="/login">Sign in</Link>
           </p>
+
         </div>
       </div>
     </div>
